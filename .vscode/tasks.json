@@ -6,7 +6,7 @@
     {
       "label": "build testApp1",
       "type": "shell",
-      "command": "mkdir -p ${workspaceFolder}/build; cd ${workspaceFolder}/build; cmake ..; make -j",
+      "command": "clear; mkdir -p ${workspaceFolder}/build; cd ${workspaceFolder}/build; cmake ..; make -j",
       "problemMatcher": [],
       "group": {
         "kind": "build",

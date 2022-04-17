@@ -1,48 +1,59 @@
 #include "functionFile.h"
+
+#include <cstdio>  // for printf
+#include <cstring> // for memset
+
 namespace test1 {
 
-template <typename signedT, typename unsignedT>
-std::string toBinary1(signedT num) {
-  std::string result;
-  unsignedT uNum = *((signedT *)(&num));
-  for (auto i = 0; i < 8 * sizeof(signedT); ++i) {
-    result.insert(0, (uNum & 1 ? one : zero));
-    uNum >>= 1;
-  }
-  return result;
-}
+template <typename T> void printBinary(T num, bool realPrint) {
+  // 1. конечно такого не может случиться, но если numSignes будет равным 0, то
+  // в цикле будет некорректное поведение при условии, что numSignes окажется
+  // беззнаковым типом, поэтому явно укажем минимальный тип из "signed integer
+  // types".
+  // 2. constexpr помогает сэкономить на выделении памяти. вместо кучи
+  // используем стек
+  constexpr short numSignes = 8 * sizeof(T);
+  char result[numSignes + 1];
+  char one{'1'};
+  char zero{'0'};
 
-template <typename signedT, typename unsignedT> void printBinary1(signedT n) {
-  std::cout << toBinary1<signedT, unsignedT>(n) << std::endl;
+  // используем матчасть. вместо этого можно было бы нагло кастануть область
+  // памяти к одному из "unsigned integer types", но второе решение менее
+  // красивое и более медленное
+  if (num < 0) {
+    num = -(num + 1);
+    one = '0';
+    zero = '1';
+  }
+  // memset позволяет подсэкономить на положительных числах, поскольку внутри
+  // цикла стоит сравнение с 0
+  memset(result, zero, numSignes);
+
+  for (auto i = numSignes - 1; i >= 0; --i) {
+    // хорошая экономия на малых значениях положительных числел большой
+    // разрядности
+    if (num == 0) {
+      break;
+    }
+    result[i] = (num & 1 ? one : zero);
+    num >>= 1;
+  }
+  result[numSignes] = '\0';
+  if (realPrint) {
+    printf("%s\n", result);
+  }
 }
 
 #define REG_TEMPLATE_SPEC(signedT)                                             \
-  template std::string toBinary1<signedT, u##signedT>(signedT num);            \
-  template void printBinary1<signedT, u##signedT>(signedT n)
+  template void printBinary<signedT>(signedT n, bool realPrint)
 
-REG_TEMPLATE_SPEC(int8_t);
-REG_TEMPLATE_SPEC(int16_t);
-REG_TEMPLATE_SPEC(int32_t);
-REG_TEMPLATE_SPEC(int64_t);
+// Строго говоря char(signed char) не является "signed integer types ", но пусть
+// будет
+REG_TEMPLATE_SPEC(char);
+REG_TEMPLATE_SPEC(short);
+REG_TEMPLATE_SPEC(int);
+REG_TEMPLATE_SPEC(long);
+REG_TEMPLATE_SPEC(long long);
 
 #undef REG_TEMPLATE_SPEC
-
-#define REG_TEMPLATE_IMPL(signedT)                                             \
-                                                                               \
-  template <> std::string toBinary2<signedT>(signedT num) {                    \
-    std::string result;                                                        \
-    u##signedT uNum = *((signedT *)(&num));                                    \
-    for (auto i = 0; i < 8 * sizeof(signedT); ++i) {                           \
-      result.insert(0, (uNum & 1 ? one : zero));                               \
-      uNum >>= 1;                                                              \
-    }                                                                          \
-    return result;                                                             \
-  }
-
-REG_TEMPLATE_IMPL(int8_t);
-REG_TEMPLATE_IMPL(int16_t);
-REG_TEMPLATE_IMPL(int32_t);
-REG_TEMPLATE_IMPL(int64_t);
-#undef REG_TEMPLATE_DECL
-
 } // namespace test1
