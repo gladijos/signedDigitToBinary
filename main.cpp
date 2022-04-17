@@ -13,6 +13,10 @@ int main(int /*argc*/, char * /*argv*/ []) {
   while (true) {
     std::cout << "Please, input signed integer " << std::endl;
     std::getline(std::cin, nStr);
+    if (nStr.empty()) {
+      std::cout << "you present empty input, try again" << std::endl;
+      continue;
+    }
     long long num;
     char *parseEnd;
     num = std::strtol(nStr.c_str(), &parseEnd, 10);
@@ -20,12 +24,7 @@ int main(int /*argc*/, char * /*argv*/ []) {
     if ((strEnd + 1) != parseEnd) {
       std::cout << "fail parse input text" << std::endl;
     } else {
-      test1::printBinary1<currentTestType, currentTestTypeU>(
-          static_cast<currentTestType>(num));
-      test1::printBinary2(static_cast<currentTestType>(num));
-      test1::printBinary3(static_cast<currentTestType>(num));
-      test1::printBinary4(static_cast<currentTestType>(num));
-      test1::printBinary5(static_cast<currentTestType>(num));
+      test1::printBinary(static_cast<currentTestType>(num), true);
     }
   }
   return 1;
